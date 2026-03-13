@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PetraYield – Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#080b0f;--bg2:#0d1117;--bg3:#111820;--card:#0f161e;--border:#1a2535;--gold:#d4a843;--gold2:#f0c76a;--gold-dim:rgba(212,168,67,0.12);--amber:#e8870a;--green:#22c55e;--red:#ef4444;--text:#e8edf5;--muted:#6b7d93;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'Syne',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+
+  /* SIDEBAR */
+  #sidebar{position:fixed;left:0;top:0;bottom:0;width:220px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:100;}
+  .sidebar-logo{padding:24px 22px 18px;border-bottom:1px solid var(--border);}
+  .sidebar-logo h1{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:3px;color:var(--gold);line-height:1;}
+  .sidebar-logo span{font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;font-family:'DM Mono',monospace;}
+  .sidebar-badge{margin:14px 16px;padding:10px 13px;background:var(--gold-dim);border:1px solid rgba(212,168,67,0.2);border-radius:8px;display:flex;align-items:center;gap:10px;}
+  .oil-drop{width:26px;height:26px;background:radial-gradient(circle at 35% 35%,var(--gold2),var(--amber));border-radius:50% 50% 50% 0;transform:rotate(-45deg);flex-shrink:0;box-shadow:0 0 10px rgba(212,168,67,0.35);}
+  .badge-text{font-size:10px;color:var(--gold2);line-height:1.4;font-weight:600;}
+  .nav-section{padding:10px 12px 2px;}
+  .nav-label{font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;font-family:'DM Mono',monospace;padding:0 8px 5px;}
+  .nav-item{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;color:var(--muted);transition:all .2s;margin-bottom:1px;border:1px solid transparent;}
+  .nav-item:hover{background:var(--bg3);color:var(--text);}
+  .nav-item.active{background:var(--gold-dim);color:var(--gold);border-color:rgba(212,168,67,0.2);}
+  .nav-icon{font-size:15px;width:18px;text-align:center;}
+  .sidebar-bottom{margin-top:auto;padding:14px;border-top:1px solid var(--border);}
+  .user-pill{display:flex;align-items:center;gap:9px;padding:9px 11px;background:var(--bg3);border-radius:10px;cursor:pointer;}
+  .user-avatar{width:32px;height:32px;background:linear-gradient(135deg,var(--gold),var(--amber));border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:#000;flex-shrink:0;}
+  .user-info{flex:1;overflow:hidden;}
+  .user-name{font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .user-bal{font-size:10px;color:var(--gold);font-family:'DM Mono',monospace;}
+  .logout-btn{font-size:11px;color:var(--muted);cursor:pointer;margin-top:8px;text-align:center;padding:6px;border-radius:6px;transition:color .2s;}
+  .logout-btn:hover{color:var(--red);}
+
+  /* MAIN */
+  #main{margin-left:220px;min-height:100vh;}
+  .topbar{padding:18px 30px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:rgba(8,11,15,0.85);backdrop-filter:blur(10px);position:sticky;top:0;z-index:50;}
+  .topbar-title{font-size:18px;font-weight:800;}
+  .topbar-right{display:flex;align-items:center;gap:12px;}
+  .live-badge{display:flex;align-items:center;gap:7px;padding:7px 13px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;font-size:11px;font-family:'DM Mono',monospace;}
+  .live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:pulse 2s infinite;}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+  .notif-btn{width:36px;height:36px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;position:relative;}
+  .notif-dot{position:absolute;top:6px;right:6px;width:7px;height:7px;border-radius:50%;background:var(--gold);border:2px solid var(--bg);display:none;}
+  .notif-dot.show{display:block;}
+
+  /* PAGES */
+  .page{display:none;padding:28px 30px;animation:fadeIn .3s ease;}
+  .page.active{display:block;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+  /* STATS */
+  .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:26px;}
+  .stat-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px 22px;position:relative;overflow:hidden;transition:border-color .2s,transform .2s;}
+  .stat-card:hover{border-color:rgba(212,168,67,0.3);transform:translateY(-2px);}
+  .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:0;transition:opacity .3s;}
+  .stat-card:hover::before{opacity:1;}
+  .stat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;font-family:'DM Mono',monospace;margin-bottom:9px;}
+  .stat-value{font-size:26px;font-weight:800;font-family:'Bebas Neue',sans-serif;letter-spacing:1px;}
+  .stat-sub{font-size:11px;color:var(--muted);margin-top:3px;}
+  .stat-icon{position:absolute;right:18px;top:16px;font-size:26px;opacity:.12;}
+  .gold{color:var(--gold);} .green{color:var(--green);}
+
+  /* SECTION TITLE */
+  .sec-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;margin-bottom:14px;display:flex;align-items:center;gap:12px;}
+  .sec-title::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--border),transparent);}
+
+  /* BARRELS GRID */
+  .barrels-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:18px;}
+  .barrel-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:22px;position:relative;overflow:hidden;cursor:pointer;transition:all .25s;}
+  .barrel-card:hover{border-color:var(--gold);transform:translateY(-3px);box-shadow:0 12px 40px rgba(212,168,67,0.08);}
+  .barrel-bg{position:absolute;right:-20px;top:-20px;width:90px;height:90px;border-radius:50%;opacity:.07;}
+  .barrel-tag{display:inline-block;padding:2px 10px;border-radius:20px;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:12px;font-family:'DM Mono',monospace;}
+  .barrel-name{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;margin-bottom:2px;}
+  .barrel-price{font-size:34px;font-weight:800;color:var(--gold);font-family:'Bebas Neue',sans-serif;letter-spacing:1px;}
+  .barrel-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0;}
+  .b-stat{background:var(--bg3);border-radius:8px;padding:9px 11px;}
+  .b-stat-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-family:'DM Mono',monospace;}
+  .b-stat-val{font-size:15px;font-weight:700;margin-top:2px;}
+  .roi-badge{display:flex;align-items:center;justify-content:space-between;background:var(--gold-dim);border:1px solid rgba(212,168,67,0.2);border-radius:8px;padding:8px 12px;margin-bottom:14px;}
+  .roi-label{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;}
+  .roi-val{font-size:18px;font-weight:800;color:var(--gold);font-family:'Bebas Neue',sans-serif;letter-spacing:1px;}
+  .btn-activate{width:100%;padding:12px;background:linear-gradient(135deg,var(--gold),var(--amber));border:none;border-radius:10px;color:#000;font-weight:800;font-size:13px;cursor:pointer;font-family:'Syne',sans-serif;letter-spacing:.5px;transition:all .2s;}
+  .btn-activate:hover{transform:scale(1.02);box-shadow:0 6px 20px rgba(212,168,67,0.3);}
+  .btn-outline{width:100%;padding:12px;background:transparent;border:1px solid var(--border);border-radius:10px;color:var(--text);font-weight:700;font-size:13px;cursor:pointer;font-family:'Syne',sans-serif;transition:all .2s;margin-top:7px;}
+  .btn-outline:hover{border-color:var(--gold);color:var(--gold);}
+
+  /* ACTIVE BARRELS */
+  .abar-row{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 20px;display:flex;align-items:center;gap:18px;margin-bottom:10px;transition:border-color .2s;}
+  .abar-row:hover{border-color:rgba(212,168,67,0.3);}
+  .abar-icon{width:40px;height:40px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px;background:var(--gold-dim);flex-shrink:0;}
+  .abar-info{flex:1;}
+  .abar-name{font-weight:700;font-size:14px;}
+  .abar-cycle{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;margin-top:1px;}
+  .prog-wrap{height:4px;background:var(--border);border-radius:10px;margin-top:7px;}
+  .prog-bar{height:100%;border-radius:10px;background:linear-gradient(90deg,var(--gold),var(--amber));}
+  .abar-earn{text-align:right;flex-shrink:0;}
+  .abar-earn-val{font-size:17px;font-weight:800;color:var(--green);font-family:'Bebas Neue',sans-serif;letter-spacing:1px;}
+  .abar-earn-label{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;}
+  .empty-state{text-align:center;padding:48px 24px;color:var(--muted);}
+  .empty-state .empty-icon{font-size:48px;margin-bottom:14px;}
+  .empty-state p{font-size:14px;line-height:1.6;}
+
+  /* WALLET */
+  .wallet-hero{background:linear-gradient(135deg,#0d1f38 0%,#0a150a 100%);border:1px solid var(--border);border-radius:18px;padding:30px;margin-bottom:22px;position:relative;overflow:hidden;}
+  .wallet-hero::before{content:'';position:absolute;top:-40px;right:-40px;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(212,168,67,0.12),transparent 70%);}
+  .wal-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:2px;font-family:'DM Mono',monospace;}
+  .wal-bal{font-family:'Bebas Neue',sans-serif;font-size:50px;color:var(--gold);letter-spacing:2px;line-height:1;margin:6px 0 3px;}
+  .wal-usdt{font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;}
+  .wal-actions{display:flex;gap:10px;margin-top:22px;}
+  .wal-btn{flex:1;padding:12px;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;border:none;font-family:'Syne',sans-serif;transition:all .2s;}
+  .wal-btn.dep{background:linear-gradient(135deg,var(--gold),var(--amber));color:#000;}
+  .wal-btn.wd{background:var(--bg3);border:1px solid var(--border);color:var(--text);}
+  .wal-btn:hover{transform:translateY(-1px);}
+
+  .addr-box{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:18px 22px;margin-bottom:18px;}
+  .addr-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-family:'DM Mono',monospace;margin-bottom:9px;}
+  .addr-val{font-family:'DM Mono',monospace;font-size:12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:11px 13px;word-break:break-all;display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  .copy-btn{padding:5px 12px;background:var(--gold-dim);border:1px solid rgba(212,168,67,0.3);border-radius:6px;color:var(--gold);font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;transition:background .2s;}
+  .copy-btn:hover{background:rgba(212,168,67,0.2);}
+
+  /* DEPOSIT FLOW */
+  .dep-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin:20px 0;}
+  .dep-step{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;text-align:center;}
+  .dep-step-num{width:32px;height:32px;border-radius:50%;background:var(--gold-dim);border:1px solid rgba(212,168,67,0.3);color:var(--gold);font-family:'Bebas Neue',sans-serif;font-size:18px;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;}
+  .dep-step-title{font-size:13px;font-weight:700;margin-bottom:4px;}
+  .dep-step-desc{font-size:11px;color:var(--muted);line-height:1.5;}
+
+  /* TRANSACTIONS */
+  .tx-wrap{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
+  .tx-table{width:100%;border-collapse:collapse;}
+  .tx-table th{text-align:left;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;font-family:'DM Mono',monospace;padding:12px 16px;border-bottom:1px solid var(--border);font-weight:500;}
+  .tx-table td{padding:13px 16px;border-bottom:1px solid rgba(26,37,53,0.4);font-size:13px;}
+  .tx-table tr:last-child td{border-bottom:none;}
+  .tx-table tbody tr{transition:background .15s;}
+  .tx-table tbody tr:hover{background:rgba(255,255,255,0.02);}
+  .tx-type{display:inline-flex;align-items:center;gap:6px;}
+  .tx-dot{width:7px;height:7px;border-radius:50%;}
+  .status-badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:700;font-family:'DM Mono',monospace;}
+  .s-completed{background:rgba(34,197,94,0.1);color:var(--green);}
+  .s-pending{background:rgba(212,168,67,0.1);color:var(--gold);}
+  .s-rejected{background:rgba(239,68,68,0.1);color:var(--red);}
+
+  /* REFERRAL */
+  .ref-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:22px;}
+  .ref-stat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;text-align:center;}
+  .ref-stat-val{font-family:'Bebas Neue',sans-serif;font-size:30px;color:var(--gold);letter-spacing:1px;}
+  .ref-stat-label{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;margin-top:3px;}
+  .ref-link-box{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:22px;}
+  .ref-levels{display:grid;grid-template-columns:1fr 1fr;gap:14px;max-width:440px;}
+  .ref-level{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:18px;text-align:center;}
+  .ref-level-pct{font-family:'Bebas Neue',sans-serif;font-size:34px;color:var(--gold);letter-spacing:2px;}
+
+  /* WITHDRAW */
+  .wd-rules{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:18px 22px;margin-bottom:20px;}
+  .wd-rule{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(26,37,53,0.5);font-size:13px;}
+  .wd-rule:last-child{border-bottom:none;}
+  .wd-rule span:first-child{color:var(--muted);}
+  .wd-calc{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:14px;display:none;}
+  .wd-calc-row{display:flex;justify-content:space-between;padding:5px 0;font-size:13px;}
+  .wd-calc-total{font-size:15px;font-weight:800;padding-top:8px;border-top:1px solid var(--border);margin-top:5px;}
+
+  /* FAQ */
+  .faq-item{background:var(--card);border:1px solid var(--border);border-radius:12px;margin-bottom:8px;overflow:hidden;}
+  .faq-q{padding:16px 20px;font-weight:700;font-size:14px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:color .2s;}
+  .faq-q:hover,.faq-item.open .faq-q{color:var(--gold);}
+  .faq-a{padding:0 20px 14px;font-size:13px;color:var(--muted);line-height:1.7;display:none;}
+  .faq-item.open .faq-a{display:block;}
+  .faq-ch{transition:transform .2s;}
+  .faq-item.open .faq-ch{transform:rotate(180deg);}
+
+  /* MODAL */
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);z-index:200;display:none;align-items:center;justify-content:center;}
+  .modal-overlay.open{display:flex;}
+  .modal{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:30px;width:430px;max-width:94vw;position:relative;animation:mIn .25s ease;}
+  @keyframes mIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+  .modal-close{position:absolute;top:14px;right:14px;width:30px;height:30px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--muted);}
+  .modal-close:hover{color:var(--text);}
+  .modal-title{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;margin-bottom:3px;}
+  .modal-sub{font-size:12px;color:var(--muted);margin-bottom:20px;}
+  .modal-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px;}
+  .modal-row:last-of-type{border-bottom:none;margin-bottom:18px;}
+  .modal-row-label{color:var(--muted);}
+  .modal-row-val{font-weight:700;}
+
+  /* DEPOSIT MODAL */
+  .dep-form .form-group{margin-bottom:13px;}
+  .dep-form .form-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-family:'DM Mono',monospace;margin-bottom:5px;display:block;}
+  .dep-form .form-input{width:100%;padding:11px 13px;background:var(--bg2);border:1px solid var(--border);border-radius:9px;color:var(--text);font-size:13px;font-family:'Syne',sans-serif;outline:none;transition:border-color .2s;}
+  .dep-form .form-input:focus{border-color:var(--gold);}
+
+  /* CYCLE END */
+  .cycle-modal{background:linear-gradient(135deg,#0d1a0d,#1a1a0a);border-color:rgba(212,168,67,0.4);}
+  .cycle-amt{font-family:'Bebas Neue',sans-serif;font-size:50px;color:var(--gold);text-align:center;line-height:1;margin:10px 0 5px;letter-spacing:2px;}
+  .cycle-bonus{text-align:center;font-size:12px;color:var(--green);font-family:'DM Mono',monospace;margin-bottom:22px;}
+  .cycle-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+
+  /* TOAST */
+  #toast{position:fixed;bottom:24px;right:24px;background:var(--card);border:1px solid var(--gold);border-radius:12px;padding:12px 18px;font-size:13px;font-weight:600;z-index:999;transform:translateY(80px);opacity:0;transition:all .3s;pointer-events:none;display:flex;align-items:center;gap:9px;box-shadow:0 8px 32px rgba(212,168,67,0.12);}
+  #toast.show{transform:translateY(0);opacity:1;}
+
+  /* LOADING SCREEN */
+  #loading-screen{position:fixed;inset:0;background:var(--bg);z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;}
+  #loading-screen .logo{font-family:'Bebas Neue',sans-serif;font-size:40px;letter-spacing:4px;color:var(--gold);}
+  .loader{width:32px;height:32px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  .form-group{margin-bottom:14px;}
+  .form-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-family:'DM Mono',monospace;margin-bottom:5px;display:block;}
+  .form-input{width:100%;padding:12px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;font-family:'Syne',sans-serif;outline:none;transition:border-color .2s;}
+  .form-input:focus{border-color:var(--gold);}
+  .form-input::placeholder{color:var(--muted);}
+
+  ::-webkit-scrollbar{width:5px;}
+  ::-webkit-scrollbar-track{background:var(--bg);}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loading-screen">
+  <div class="logo">PETRAYIELD</div>
+  <div class="loader"></div>
+</div>
+
+<!-- SIDEBAR -->
+<div id="sidebar">
+  <div class="sidebar-logo">
+    <h1>PETRA<br>YIELD</h1>
+    <span>Refining Digital Wealth</span>
+  </div>
+  <div class="sidebar-badge">
+    <div class="oil-drop"></div>
+    <div class="badge-text">USDT · BEP20<br><span style="color:var(--green)">●</span> Live</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Main</div>
+    <div class="nav-item active" data-page="dashboard"><span class="nav-icon">⬛</span> Dashboard</div>
+    <div class="nav-item" data-page="invest"><span class="nav-icon">⛽</span> Invest in Oil</div>
+    <div class="nav-item" data-page="wallet"><span class="nav-icon">💼</span> Wallet</div>
+    <div class="nav-item" data-page="withdraw"><span class="nav-icon">↗</span> Withdraw</div>
+    <div class="nav-item" data-page="transactions"><span class="nav-icon">📋</span> Transactions</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Account</div>
+    <div class="nav-item" data-page="referral"><span class="nav-icon">👥</span> Referral</div>
+    <div class="nav-item" data-page="faq"><span class="nav-icon">❓</span> FAQ</div>
+    <div class="nav-item" data-page="legal"><span class="nav-icon">📄</span> Legal</div>
+  </div>
+  <div class="sidebar-bottom">
+    <div class="user-pill">
+      <div class="user-avatar" id="user-initials">?</div>
+      <div class="user-info">
+        <div class="user-name" id="user-name-display">Loading...</div>
+        <div class="user-bal" id="user-bal-display">$0.00</div>
+      </div>
+    </div>
+    <div class="logout-btn" id="logout-btn">↩ Sign Out</div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+  <div class="topbar">
+    <div class="topbar-title" id="page-title">Dashboard</div>
+    <div class="topbar-right">
+      <div class="live-badge"><div class="live-dot"></div>USDT/BEP20 · $1.0000</div>
+      <div class="notif-btn" id="notif-btn">🔔<div class="notif-dot" id="notif-dot"></div></div>
+    </div>
+  </div>
+
+  <!-- ── DASHBOARD ── -->
+  <div class="page active" id="page-dashboard">
+    <div style="margin-bottom:22px;">
+      <div style="font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;" id="greeting">Good morning 🌅</div>
+      <div style="font-size:20px;font-weight:800;margin-top:3px;" id="dash-name">Welcome</div>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-icon">💼</div><div class="stat-label">Total Balance</div><div class="stat-value gold" id="stat-balance">$0.00</div><div class="stat-sub">USDT (BEP20)</div></div>
+      <div class="stat-card"><div class="stat-icon">⛽</div><div class="stat-label">Active Barrels</div><div class="stat-value" id="stat-barrels">0</div><div class="stat-sub">Running cycles</div></div>
+      <div class="stat-card"><div class="stat-icon">📈</div><div class="stat-label">Total Earnings</div><div class="stat-value green" id="stat-earnings">$0.00</div><div class="stat-sub">All time returns</div></div>
+      <div class="stat-card"><div class="stat-icon">↗</div><div class="stat-label">Withdrawable</div><div class="stat-value" id="stat-withdrawable">$0.00</div><div class="stat-sub" id="stat-wd-after">After 10% fee: $0.00</div></div>
+      <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-label">Referral Earnings</div><div class="stat-value gold" id="stat-referral">$0.00</div><div class="stat-sub" id="stat-ref-count">0 referrals</div></div>
+    </div>
+    <div class="sec-title">Active Barrels</div>
+    <div id="dash-active-barrels"><div class="empty-state"><div class="empty-icon">⛽</div><p>No active barrels yet.<br>Go to <strong>Invest in Oil</strong> to get started!</p></div></div>
+    <div style="margin-top:26px;">
+      <div class="sec-title">Quick Actions</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn-activate" style="width:auto;padding:11px 24px;" onclick="nav('invest')">⛽ Invest Now</button>
+        <button class="btn-outline" style="width:auto;padding:11px 24px;margin-top:0;" onclick="nav('withdraw')">↗ Withdraw</button>
+        <button class="btn-outline" style="width:auto;padding:11px 24px;margin-top:0;" onclick="nav('wallet')">💼 Deposit</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── INVEST ── -->
+  <div class="page" id="page-invest">
+    <p style="font-size:13px;color:var(--muted);margin-bottom:22px;">Choose a barrel, deposit USDT, and start earning daily yield automatically.</p>
+    <div class="barrels-grid" id="barrels-grid"></div>
+  </div>
+
+  <!-- ── WALLET ── -->
+  <div class="page" id="page-wallet">
+    <div class="wallet-hero">
+      <div class="wal-label">Total Balance</div>
+      <div class="wal-bal" id="wal-bal">$0.00</div>
+      <div class="wal-usdt" id="wal-usdt">≈ 0.00 USDT</div>
+      <div class="wal-actions">
+        <button class="wal-btn dep" onclick="openDepositModal()">⬇ Deposit USDT</button>
+        <button class="wal-btn wd" onclick="nav('withdraw')">⬆ Withdraw</button>
+      </div>
+    </div>
+    <div class="addr-box">
+      <div class="addr-label">Platform Wallet Address (USDT · BEP20 Only)</div>
+      <div class="addr-val">
+        <span id="platform-addr" style="flex:1;">Loading...</span>
+        <span class="copy-btn" onclick="copyAddr()">Copy</span>
+      </div>
+      <div style="margin-top:10px;font-size:11px;color:var(--muted);">⚠ Only send USDT on <strong style="color:var(--text)">BEP20 (BSC)</strong> network. Wrong network = permanent loss of funds.</div>
+    </div>
+    <div class="sec-title">How to Deposit</div>
+    <div class="dep-steps">
+      <div class="dep-step"><div class="dep-step-num">1</div><div class="dep-step-title">Choose Barrel</div><div class="dep-step-desc">Select your investment barrel and note the price.</div></div>
+      <div class="dep-step"><div class="dep-step-num">2</div><div class="dep-step-title">Send USDT</div><div class="dep-step-desc">Send exact USDT amount to our BEP20 wallet address above.</div></div>
+      <div class="dep-step"><div class="dep-step-num">3</div><div class="dep-step-title">Submit TX Hash</div><div class="dep-step-desc">Click "Deposit" and submit your transaction hash from BSCScan.</div></div>
+      <div class="dep-step"><div class="dep-step-num">4</div><div class="dep-step-title">Admin Confirms</div><div class="dep-step-desc">Admin verifies payment within 24hrs. Barrel activates automatically.</div></div>
+    </div>
+    <div class="sec-title">Balance Breakdown</div>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-label">Invested</div><div class="stat-value" id="wal-invested">$0.00</div></div>
+      <div class="stat-card"><div class="stat-label">Total Earned</div><div class="stat-value green" id="wal-earned">$0.00</div></div>
+      <div class="stat-card"><div class="stat-label">Withdrawable</div><div class="stat-value gold" id="wal-withdrawable">$0.00</div></div>
+      <div class="stat-card"><div class="stat-label">Referral Bonus</div><div class="stat-value" id="wal-referral">$0.00</div></div>
+    </div>
+  </div>
+
+  <!-- ── WITHDRAW ── -->
+  <div class="page" id="page-withdraw">
+    <div style="max-width:520px;">
+      <div class="stat-card" style="margin-bottom:22px;">
+        <div class="stat-label">Available to Withdraw</div>
+        <div class="stat-value gold" id="wd-avail">$0.00</div>
+        <div class="stat-sub" id="wd-after">After 10% fee: $0.00</div>
+      </div>
+      <div class="wd-rules">
+        <div class="wd-rule"><span>Minimum withdrawal</span><span style="font-weight:700;">$5.00</span></div>
+        <div class="wd-rule"><span>Maximum per day</span><span style="font-weight:700;">$500.00</span></div>
+        <div class="wd-rule"><span>Processing time</span><span style="font-weight:700;">24–48 hrs</span></div>
+        <div class="wd-rule"><span>Working hours</span><span style="font-weight:700;">Mon–Fri, 11:00–16:00</span></div>
+        <div class="wd-rule"><span>Fee</span><span style="font-weight:700;color:var(--gold);">10%</span></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Amount (USDT)</label>
+        <input class="form-input" type="number" id="wd-amount" placeholder="Minimum $5" min="5" max="500" oninput="calcWd()">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Your USDT Wallet Address (BEP20)</label>
+        <input class="form-input" type="text" id="wd-address" placeholder="0x...">
+      </div>
+      <div class="wd-calc" id="wd-calc">
+        <div class="wd-calc-row"><span style="color:var(--muted)">Amount</span><span id="wdc-amount">$0.00</span></div>
+        <div class="wd-calc-row"><span style="color:var(--muted)">Fee (10%)</span><span style="color:var(--red)" id="wdc-fee">-$0.00</span></div>
+        <div class="wd-calc-row wd-calc-total"><span>You Receive</span><span style="color:var(--green)" id="wdc-net">$0.00</span></div>
+      </div>
+      <button class="btn-activate" id="wd-btn" onclick="submitWithdraw()">Submit Withdrawal Request →</button>
+    </div>
+  </div>
+
+  <!-- ── TRANSACTIONS ── -->
+  <div class="page" id="page-transactions">
+    <div class="tx-wrap">
+      <table class="tx-table">
+        <thead><tr><th>Type</th><th>Amount</th><th>Note</th><th>Date</th><th>Status</th></tr></thead>
+        <tbody id="tx-tbody"><tr><td colspan="5" style="text-align:center;padding:40px;color:var(--muted);">Loading transactions...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── REFERRAL ── -->
+  <div class="page" id="page-referral">
+    <div class="ref-stats">
+      <div class="ref-stat"><div class="ref-stat-val" id="ref-total">0</div><div class="ref-stat-label">Total Referrals</div></div>
+      <div class="ref-stat"><div class="ref-stat-val" style="color:var(--green)" id="ref-earned">$0.00</div><div class="ref-stat-label">Total Earned</div></div>
+      <div class="ref-stat"><div class="ref-stat-val" id="ref-active">0</div><div class="ref-stat-label">Active Investors</div></div>
+    </div>
+    <div class="ref-link-box">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;margin-bottom:5px;">Your Referral Link</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:16px;">Earn 5% when Level 1 invests, 2% when Level 2 invests.</div>
+      <div class="addr-val">
+        <span id="ref-link" style="flex:1;font-size:11px;">Loading...</span>
+        <span class="copy-btn" onclick="copyRef()">Copy</span>
+      </div>
+    </div>
+    <div class="sec-title">Commission Structure</div>
+    <div class="ref-levels" style="margin-bottom:24px;">
+      <div class="ref-level"><div style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:4px;">Level 1 – Direct</div><div class="ref-level-pct">5%</div><div style="font-size:11px;color:var(--muted);margin-top:3px;">On every investment</div></div>
+      <div class="ref-level"><div style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:4px;">Level 2 – Indirect</div><div class="ref-level-pct" style="color:var(--muted);">2%</div><div style="font-size:11px;color:var(--muted);margin-top:3px;">From your L1's referrals</div></div>
+    </div>
+    <div class="sec-title">Referral History</div>
+    <div class="tx-wrap">
+      <table class="tx-table">
+        <thead><tr><th>User</th><th>Invested</th><th>Your Earn</th><th>Level</th><th>Date</th></tr></thead>
+        <tbody id="ref-tbody"><tr><td colspan="5" style="text-align:center;padding:32px;color:var(--muted);">No referrals yet. Share your link to start earning!</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── FAQ ── -->
+  <div class="page" id="page-faq">
+    <div style="max-width:660px;" id="faq-list"></div>
+  </div>
+
+  <!-- ── LEGAL ── -->
+  <div class="page" id="page-legal">
+    <div style="max-width:660px;">
+      <div class="addr-box" style="border-color:rgba(212,168,67,0.3);margin-bottom:16px;">
+        <div class="addr-label" style="color:var(--gold);">⚠ Risk Disclosure</div>
+        <div style="font-size:13px;color:var(--muted);line-height:1.8;margin-top:8px;">
+          <strong style="color:var(--text);">Petra Barrels are symbolic digital investment units</strong>, not real oil barrels or physical commodities. PetraYield does not represent ownership of any physical assets.<br><br>
+          All projected returns are estimates. Returns are <strong style="color:var(--text);">not guaranteed</strong> and may vary. Cryptocurrency investments carry significant risk. Only invest funds you can afford to lose.
+        </div>
+      </div>
+      <div class="addr-box">
+        <div class="addr-label">Backend Yield Model</div>
+        <div style="font-size:13px;color:var(--muted);line-height:2;margin-top:8px;">
+          • <strong style="color:var(--text);">40%</strong> → Yield Generation (staking, arbitrage, liquidity pools)<br>
+          • <strong style="color:var(--text);">30%</strong> → Payout Reserve<br>
+          • <strong style="color:var(--text);">20%</strong> → Withdrawal Liquidity Pool<br>
+          • <strong style="color:var(--text);">10%</strong> → Operations (marketing, support, dev)
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ MODALS ══════ -->
+
+<!-- Barrel Detail -->
+<div class="modal-overlay" id="barrel-modal">
+  <div class="modal">
+    <div class="modal-close" onclick="closeModal('barrel-modal')">✕</div>
+    <div class="modal-title" id="bm-name">Petra Lite</div>
+    <div class="modal-sub">Review details and submit your deposit to activate</div>
+    <div class="modal-row"><span class="modal-row-label">Investment Price</span><span class="modal-row-val gold" id="bm-price">$10</span></div>
+    <div class="modal-row"><span class="modal-row-label">Cycle Duration</span><span class="modal-row-val" id="bm-cycle">30 days</span></div>
+    <div class="modal-row"><span class="modal-row-label">Daily Yield</span><span class="modal-row-val green" id="bm-daily">$0.20/day</span></div>
+    <div class="modal-row"><span class="modal-row-label">Total Return at End</span><span class="modal-row-val gold" id="bm-return">$16</span></div>
+    <div class="modal-row"><span class="modal-row-label">ROI</span><span class="modal-row-val" id="bm-roi">160%</span></div>
+    <button class="btn-activate" onclick="proceedToDeposit()">⛽ Deposit & Activate →</button>
+    <button class="btn-outline" onclick="closeModal('barrel-modal')">Cancel</button>
+  </div>
+</div>
+
+<!-- Deposit Submission -->
+<div class="modal-overlay" id="deposit-modal">
+  <div class="modal dep-form">
+    <div class="modal-close" onclick="closeModal('deposit-modal')">✕</div>
+    <div class="modal-title">Submit Deposit</div>
+    <div class="modal-sub" id="dep-modal-sub">Send USDT to the platform wallet, then submit your TX hash below.</div>
+    <div class="addr-box" style="margin-bottom:16px;">
+      <div class="addr-label">Send USDT (BEP20) to this address</div>
+      <div class="addr-val" style="font-size:11px;">
+        <span id="dep-addr">Loading...</span>
+        <span class="copy-btn" onclick="copyAddr()">Copy</span>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Amount Sent (USDT)</label>
+      <input class="form-input" type="number" id="dep-amount" placeholder="e.g. 10">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Transaction Hash (from BSCScan)</label>
+      <input class="form-input" type="text" id="dep-txhash" placeholder="0x...">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Barrel to Activate</label>
+      <select class="form-input" id="dep-barrel">
+        <option value="">Select barrel...</option>
+      </select>
+    </div>
+    <button class="btn-activate" id="dep-submit-btn" onclick="submitDeposit()">Submit for Admin Review →</button>
+    <div style="font-size:11px;color:var(--muted);margin-top:12px;text-align:center;">Admin confirms deposits within 24 hours. Your barrel will activate automatically.</div>
+  </div>
+</div>
+
+<!-- Cycle End -->
+<div class="modal-overlay" id="cycle-modal">
+  <div class="modal cycle-modal">
+    <div class="modal-close" onclick="closeModal('cycle-modal')">✕</div>
+    <div style="text-align:center;margin-bottom:6px;">
+      <div style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:2px;">CYCLE COMPLETE 🎉</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;margin-top:4px;" id="cycle-barrel-name">Barrel Name</div>
+    </div>
+    <div class="cycle-amt" id="cycle-earned">$0.00</div>
+    <div class="cycle-bonus" id="cycle-bonus-text">Reinvest → get +5% bonus!</div>
+    <div class="cycle-btns">
+      <button class="btn-activate" id="cycle-reinvest-btn">🔁 Reinvest</button>
+      <button class="wal-btn wd" style="border-radius:10px;" id="cycle-withdraw-btn">↗ Withdraw</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"><span id="toast-msg"></span></div>
+
+<script type="module">
+import {
+  auth, db, BARRELS,
+  getUserProfile, getUserBarrels, getUserTransactions,
+  getUserDeposits, getUserReferrals,
+  createDeposit, createWithdrawal, reinvestBarrel, logoutUser
+} from './firebase.js';
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+
+// ── CONFIG ──
+const PLATFORM_WALLET = "0xYOUR_USDT_BEP20_WALLET_ADDRESS_HERE"; // <-- SET YOUR WALLET
+const BASE_URL = window.location.origin;
+
+let currentUser = null;
+let userProfile  = null;
+let userBarrels  = [];
+let selectedBarrel = null;
+
+// ── PAGE TITLES ──
+const TITLES = {
+  dashboard:'Dashboard', invest:'Invest in Oil', wallet:'Wallet',
+  withdraw:'Withdraw', transactions:'Transactions',
+  referral:'Referral Program', faq:'FAQ', legal:'Legal & Risk'
+};
+
+// ── AUTH GUARD ──
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    window.location.href = './index.html';
+    return;
+  }
+  currentUser = user;
+  await loadUserData();
+  document.getElementById('loading-screen').style.display = 'none';
+  setupNav();
+  setupFAQ();
+  renderBarrels();
+  populateDepositBarrelSelect();
+  setGreeting();
+  document.getElementById('platform-addr').textContent = PLATFORM_WALLET;
+  document.getElementById('dep-addr').textContent = PLATFORM_WALLET;
+  document.getElementById('ref-link').textContent = `${BASE_URL}/?ref=${userProfile?.referralCode || ''}`;
+});
+
+async function loadUserData() {
+  userProfile = await getUserProfile(currentUser.uid);
+  if (!userProfile) return;
+  userBarrels  = await getUserBarrels(currentUser.uid);
+  updateUI();
+}
+
+function updateUI() {
+  const p = userProfile;
+  const bal   = `$${(p.totalBalance||0).toFixed(2)}`;
+  const earn  = `$${(p.totalEarnings||0).toFixed(2)}`;
+  const wd    = `$${(p.withdrawableBalance||0).toFixed(2)}`;
+  const wdNet = `$${((p.withdrawableBalance||0)*0.9).toFixed(2)}`;
+  const ref   = `$${(p.referralEarnings||0).toFixed(2)}`;
+  const initials = (p.fullName||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+
+  document.getElementById('user-initials').textContent = initials;
+  document.getElementById('user-name-display').textContent = p.fullName||'User';
+  document.getElementById('user-bal-display').textContent = bal;
+  document.getElementById('dash-name').textContent = p.fullName||'Welcome';
+
+  document.getElementById('stat-balance').textContent     = bal;
+  document.getElementById('stat-barrels').textContent     = userBarrels.length;
+  document.getElementById('stat-earnings').textContent    = earn;
+  document.getElementById('stat-withdrawable').textContent= wd;
+  document.getElementById('stat-wd-after').textContent    = `After 10% fee: ${wdNet}`;
+  document.getElementById('stat-referral').textContent    = ref;
+
+  document.getElementById('wal-bal').textContent          = bal;
+  document.getElementById('wal-usdt').textContent         = `≈ ${(p.totalBalance||0).toFixed(2)} USDT`;
+  document.getElementById('wal-invested').textContent     = bal;
+  document.getElementById('wal-earned').textContent       = earn;
+  document.getElementById('wal-withdrawable').textContent = wd;
+  document.getElementById('wal-referral').textContent     = ref;
+
+  document.getElementById('wd-avail').textContent         = wd;
+  document.getElementById('wd-after').textContent         = `After 10% fee: ${wdNet}`;
+
+  document.getElementById('ref-earned').textContent       = ref;
+  document.getElementById('ref-link').textContent         = `${BASE_URL}/?ref=${p.referralCode||''}`;
+
+  renderActiveBarrels();
+  loadTransactions();
+  loadReferrals();
+  checkCycleEnd();
+}
+
+// ── ACTIVE BARRELS ON DASHBOARD ──
+function renderActiveBarrels() {
+  const container = document.getElementById('dash-active-barrels');
+  if (!userBarrels.length) {
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">⛽</div><p>No active barrels yet.<br>Go to <strong>Invest in Oil</strong> to get started!</p></div>`;
+    return;
+  }
+  const icons = ['⛽','🔵','⚡','🔥','💎','🚀','👑'];
+  container.innerHTML = userBarrels.map((b,i) => {
+    const start = new Date(b.startDate);
+    const end   = new Date(b.endDate);
+    const now   = new Date();
+    const totalDays   = b.cycle;
+    const daysGone    = Math.min(Math.floor((now - start)/(1000*60*60*24)), totalDays);
+    const pct         = Math.round((daysGone/totalDays)*100);
+    const earned      = (daysGone * b.dailyYield).toFixed(2);
+    return `
+      <div class="abar-row">
+        <div class="abar-icon">${icons[i%7]}</div>
+        <div class="abar-info">
+          <div class="abar-name">${b.barrelName}</div>
+          <div class="abar-cycle">Day ${daysGone} of ${totalDays} · $${b.dailyYield}/day</div>
+          <div class="prog-wrap"><div class="prog-bar" style="width:${pct}%"></div></div>
+        </div>
+        <div class="abar-earn">
+          <div class="abar-earn-val">$${earned}</div>
+          <div class="abar-earn-label">Earned</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ── BARREL CARDS ──
+function renderBarrels() {
+  const tiers  = ['Starter','Basic','Popular','Advanced','Premium','Ultra','Supreme'];
+  const colors = ['#22c55e','#3b82f6','#8b5cf6','#f97316','#d4a843','#ec4899','#ef4444'];
+  const icons  = ['🪨','🔵','⚡','🔥','💎','🚀','👑'];
+  document.getElementById('barrels-grid').innerHTML = BARRELS.map((b,i) => `
+    <div class="barrel-card" onclick="openBarrel(${i})">
+      <div class="barrel-bg" style="background:${colors[i]}"></div>
+      <div class="barrel-tag" style="background:${colors[i]}22;color:${colors[i]};border:1px solid ${colors[i]}44">${tiers[i]}</div>
+      <div style="display:flex;align-items:center;gap:9px;margin-bottom:3px;">
+        <span style="font-size:20px">${icons[i]}</span>
+        <div class="barrel-name">${b.name}</div>
+      </div>
+      <div class="barrel-price">$${b.price}</div>
+      <div class="barrel-stats">
+        <div class="b-stat"><div class="b-stat-label">Cycle</div><div class="b-stat-val">${b.cycle} days</div></div>
+        <div class="b-stat"><div class="b-stat-label">Daily Yield</div><div class="b-stat-val" style="color:var(--green)">$${b.daily.toFixed(2)}</div></div>
+      </div>
+      <div class="roi-badge">
+        <div><div class="roi-label">Total Return</div><div style="font-size:14px;font-weight:700">$${b.total}</div></div>
+        <div style="text-align:right"><div class="roi-label">ROI</div><div class="roi-val">${b.roi}%</div></div>
+      </div>
+      <button class="btn-activate">Activate Barrel →</button>
+    </div>`).join('');
+}
+
+function populateDepositBarrelSelect() {
+  const sel = document.getElementById('dep-barrel');
+  BARRELS.forEach(b => {
+    const opt = document.createElement('option');
+    opt.value = b.name;
+    opt.textContent = `${b.name} – $${b.price} USDT`;
+    sel.appendChild(opt);
+  });
+}
+
+// ── TRANSACTIONS ──
+async function loadTransactions() {
+  const tbody = document.getElementById('tx-tbody');
+  try {
+    const txs = await getUserTransactions(currentUser.uid);
+    if (!txs.length) {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--muted)">No transactions yet.</td></tr>';
+      return;
+    }
+    const typeColor = { deposit:'var(--gold)', yield:'var(--green)', withdrawal:'var(--red)', referral:'var(--green)', reinvest:'var(--gold)' };
+    tbody.innerHTML = txs.map(t => {
+      const color = typeColor[t.type] || 'var(--muted)';
+      const sign  = t.amount > 0 ? '+' : '';
+      const date  = t.createdAt?.toDate ? t.createdAt.toDate().toLocaleDateString() : '—';
+      const statusClass = { completed:'s-completed', pending:'s-pending', rejected:'s-rejected' }[t.status] || 's-pending';
+      return `<tr>
+        <td><span class="tx-type"><span class="tx-dot" style="background:${color}"></span>${capitalize(t.type)}</span></td>
+        <td style="color:${color};font-weight:700">${sign}$${Math.abs(t.amount).toFixed(2)}</td>
+        <td style="color:var(--muted);font-size:12px">${t.note||'—'}</td>
+        <td style="color:var(--muted);font-family:'DM Mono',monospace;font-size:11px">${date}</td>
+        <td><span class="status-badge ${statusClass}">${capitalize(t.status)}</span></td>
+      </tr>`;
+    }).join('');
+  } catch(e) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--red);padding:32px">Error loading transactions.</td></tr>'; }
+}
+
+// ── REFERRALS ──
+async function loadReferrals() {
+  try {
+    const refs = await getUserReferrals(currentUser.uid);
+    document.getElementById('ref-total').textContent  = refs.length;
+    document.getElementById('ref-active').textContent = refs.filter(r=>r.earned>0).length;
+    const tbody = document.getElementById('ref-tbody');
+    if (!refs.length) {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--muted)">No referrals yet.</td></tr>';
+    } else {
+      tbody.innerHTML = refs.map(r => {
+        const date = r.createdAt?.toDate ? r.createdAt.toDate().toLocaleDateString() : '—';
+        return `<tr>
+          <td style="color:var(--muted);font-family:'DM Mono',monospace;font-size:11px">${r.refereeId.slice(0,8)}...</td>
+          <td>—</td>
+          <td style="color:var(--green);font-weight:700">+$${(r.earned||0).toFixed(2)}</td>
+          <td><span class="status-badge s-completed">L${r.level}</span></td>
+          <td style="color:var(--muted);font-family:'DM Mono',monospace;font-size:11px">${date}</td>
+        </tr>`;
+      }).join('');
+    }
+  } catch(e) { console.error(e); }
+}
+
+// ── CYCLE END CHECK ──
+function checkCycleEnd() {
+  const now = new Date();
+  const completed = userBarrels.filter(b => new Date(b.endDate) <= now);
+  if (completed.length) {
+    document.getElementById('notif-dot').classList.add('show');
+    const b = completed[0];
+    document.getElementById('cycle-barrel-name').textContent = b.barrelName;
+    document.getElementById('cycle-earned').textContent = `$${b.totalReturn.toFixed(2)}`;
+    const bonus = (b.totalReturn * 1.05).toFixed(2);
+    document.getElementById('cycle-bonus-text').textContent = `Reinvest now → get $${bonus} (+5% bonus!)`;
+    document.getElementById('cycle-reinvest-btn').onclick = () => handleReinvest(b.id);
+    document.getElementById('cycle-withdraw-btn').onclick = () => { closeModal('cycle-modal'); nav('withdraw'); };
+    document.getElementById('notif-btn').onclick = () => document.getElementById('cycle-modal').classList.add('open');
+  }
+}
+
+async function handleReinvest(barrelId) {
+  try {
+    const result = await reinvestBarrel(barrelId, currentUser.uid);
+    closeModal('cycle-modal');
+    toast(`🔁 Reinvested! ${result.newBarrel} activated with +5% bonus.`);
+    await loadUserData();
+  } catch(e) { toast('❌ Error reinvesting. Try again.'); }
+}
+
+// ── DEPOSIT ──
+window.openBarrel = (i) => {
+  selectedBarrel = BARRELS[i];
+  document.getElementById('bm-name').textContent  = selectedBarrel.name;
+  document.getElementById('bm-price').textContent = `$${selectedBarrel.price}`;
+  document.getElementById('bm-cycle').textContent = `${selectedBarrel.cycle} days`;
+  document.getElementById('bm-daily').textContent = `$${selectedBarrel.daily.toFixed(2)}/day`;
+  document.getElementById('bm-return').textContent= `$${selectedBarrel.total}`;
+  document.getElementById('bm-roi').textContent   = `${selectedBarrel.roi}%`;
+  document.getElementById('barrel-modal').classList.add('open');
+};
+
+window.proceedToDeposit = () => {
+  closeModal('barrel-modal');
+  if (selectedBarrel) {
+    document.getElementById('dep-amount').value = selectedBarrel.price;
+    document.getElementById('dep-barrel').value = selectedBarrel.name;
+  }
+  document.getElementById('deposit-modal').classList.add('open');
+};
+
+window.openDepositModal = () => document.getElementById('deposit-modal').classList.add('open');
+
+window.submitDeposit = async () => {
+  const amount   = parseFloat(document.getElementById('dep-amount').value);
+  const txHash   = document.getElementById('dep-txhash').value.trim();
+  const barrel   = document.getElementById('dep-barrel').value;
+  if (!amount || !txHash || !barrel) return toast('⚠ Please fill in all fields.');
+  if (!txHash.startsWith('0x')) return toast('⚠ Invalid transaction hash. Must start with 0x.');
+
+  const btn = document.getElementById('dep-submit-btn');
+  btn.disabled = true; btn.textContent = 'Submitting...';
+  try {
+    await createDeposit({ uid: currentUser.uid, amount, barrelName: barrel, barrelPrice: selectedBarrel?.price||amount, txHash });
+    closeModal('deposit-modal');
+    toast('✅ Deposit submitted! Admin will confirm within 24 hours.');
+    document.getElementById('dep-txhash').value = '';
+  } catch(e) { toast('❌ Error submitting deposit. Try again.'); }
+  finally { btn.disabled = false; btn.textContent = 'Submit for Admin Review →'; }
+};
+
+// ── WITHDRAW ──
+window.calcWd = () => {
+  const amt = parseFloat(document.getElementById('wd-amount').value)||0;
+  const calc = document.getElementById('wd-calc');
+  if (amt >= 5) {
+    document.getElementById('wdc-amount').textContent = `$${amt.toFixed(2)}`;
+    document.getElementById('wdc-fee').textContent    = `-$${(amt*.1).toFixed(2)}`;
+    document.getElementById('wdc-net').textContent    = `$${(amt*.9).toFixed(2)}`;
+    calc.style.display = 'block';
+  } else { calc.style.display = 'none'; }
+};
+
+window.submitWithdraw = async () => {
+  const amount  = parseFloat(document.getElementById('wd-amount').value);
+  const address = document.getElementById('wd-address').value.trim();
+  const avail   = userProfile?.withdrawableBalance || 0;
+  if (!amount || amount < 5) return toast('⚠ Minimum withdrawal is $5.');
+  if (amount > 500)          return toast('⚠ Maximum withdrawal per day is $500.');
+  if (amount > avail)        return toast('⚠ Insufficient withdrawable balance.');
+  if (!address.startsWith('0x')) return toast('⚠ Invalid USDT wallet address.');
+
+  const btn = document.getElementById('wd-btn');
+  btn.disabled = true; btn.textContent = 'Submitting...';
+  try {
+    await createWithdrawal({ uid: currentUser.uid, amount, walletAddress: address });
+    toast('✅ Withdrawal request submitted! Processing in 24–48 hrs.');
+    document.getElementById('wd-amount').value  = '';
+    document.getElementById('wd-address').value = '';
+    document.getElementById('wd-calc').style.display = 'none';
+    await loadUserData();
+  } catch(e) { toast('❌ Error submitting withdrawal.'); }
+  finally { btn.disabled = false; btn.textContent = 'Submit Withdrawal Request →'; }
+};
+
+// ── NAV ──
+function setupNav() {
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', () => nav(item.dataset.page));
+  });
+  document.getElementById('logout-btn').addEventListener('click', async () => {
+    await logoutUser();
+    window.location.href = './index.html';
+  });
+}
+
+window.nav = (page) => {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-'+page)?.classList.add('active');
+  document.querySelector(`[data-page="${page}"]`)?.classList.add('active');
+  document.getElementById('page-title').textContent = TITLES[page]||page;
+  if (page === 'transactions') loadTransactions();
+};
+
+// ── FAQ ──
+function setupFAQ() {
+  const faqs = [
+    ['What is PetraYield?', 'PetraYield is a digital oil-themed crypto investment platform. Petra Barrels are symbolic digital units — not real oil. Yield comes from stablecoin staking, arbitrage, liquidity pools, and algorithmic trading.'],
+    ['How do I start investing?', 'Go to "Invest in Oil", choose a barrel, click Activate, send the exact USDT amount to our BEP20 wallet, then submit your transaction hash. Admin confirms within 24 hours and your barrel goes live.'],
+    ['When can I withdraw?', 'Withdrawals process Mon–Fri, 11:00–16:00. Friday requests process the following Monday. Minimum $5, maximum $500/day. A 10% fee applies.'],
+    ['What is cycle-end reinvestment?', 'When a barrel finishes its cycle, you can reinvest your total return and get a +5% bonus on top. Example: $10 → earns $16 → reinvest → $16.80.'],
+    ['How does the referral program work?', 'Share your referral link. You earn 5% when Level 1 referrals invest, and 2% when their referrals (Level 2) invest. Commissions are auto-added to your balance.'],
+    ['Are returns guaranteed?', 'No. All returns are projected estimates based on current yield activities. Crypto carries risk — only invest what you can afford to lose.'],
+    ['Can I activate multiple barrels?', 'Yes! You can run as many barrels as you like simultaneously. Each runs its own independent cycle.'],
+  ];
+  document.getElementById('faq-list').innerHTML = faqs.map(([q,a]) => `
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">${q}<span class="faq-ch">▾</span></div>
+      <div class="faq-a">${a}</div>
+    </div>`).join('');
+}
+
+window.toggleFaq = (el) => {
+  const item = el.parentElement;
+  const was  = item.classList.contains('open');
+  document.querySelectorAll('.faq-item').forEach(f => f.classList.remove('open'));
+  if (!was) item.classList.add('open');
+};
+
+// ── UTILS ──
+window.closeModal = (id) => document.getElementById(id).classList.remove('open');
+document.querySelectorAll('.modal-overlay').forEach(m =>
+  m.addEventListener('click', e => { if(e.target===m) m.classList.remove('open'); }));
+
+window.copyAddr = () => {
+  navigator.clipboard.writeText(PLATFORM_WALLET);
+  toast('📋 Wallet address copied!');
+};
+window.copyRef = () => {
+  navigator.clipboard.writeText(document.getElementById('ref-link').textContent);
+  toast('🔗 Referral link copied!');
+};
+
+function toast(msg) {
+  const t  = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+window.toast = toast;
+
+function setGreeting() {
+  const h = new Date().getHours();
+  const g = h < 12 ? '🌅 Good morning' : h < 17 ? '☀️ Good afternoon' : '🌙 Good evening';
+  document.getElementById('greeting').textContent = g;
+}
+
+function capitalize(s) { return s ? s.charAt(0).toUpperCase()+s.slice(1) : ''; }
+</script>
+</body>
+</html>
