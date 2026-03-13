@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PetraYield – Refining Digital Wealth</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#080b0f; --bg2:#0d1117; --bg3:#111820; --card:#0f161e;
+    --border:#1a2535; --gold:#d4a843; --gold2:#f0c76a; --gold-dim:rgba(212,168,67,0.12);
+    --amber:#e8870a; --green:#22c55e; --red:#ef4444;
+    --text:#e8edf5; --muted:#6b7d93;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'Syne',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;overflow-x:hidden;}
+  body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:0;}
+  
+  .glow-orb{position:fixed;border-radius:50%;filter:blur(80px);pointer-events:none;z-index:0;}
+  .orb1{width:500px;height:500px;background:radial-gradient(circle,rgba(212,168,67,0.08),transparent 70%);top:-100px;left:-100px;}
+  .orb2{width:400px;height:400px;background:radial-gradient(circle,rgba(30,58,95,0.15),transparent 70%);bottom:-100px;right:-100px;}
+
+  .auth-wrap{position:relative;z-index:1;width:100%;max-width:900px;margin:24px;display:flex;background:var(--card);border:1px solid var(--border);border-radius:24px;overflow:hidden;box-shadow:0 40px 100px rgba(0,0,0,0.5);}
+
+  /* LEFT PANEL */
+  .auth-left{flex:1;background:linear-gradient(150deg,#0d1f38 0%,#06110a 100%);padding:52px 48px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden;}
+  .auth-left::before{content:'';position:absolute;bottom:-80px;left:-80px;width:340px;height:340px;border-radius:50%;background:radial-gradient(circle,rgba(212,168,67,0.18),transparent 70%);pointer-events:none;}
+  .auth-left::after{content:'';position:absolute;top:-60px;right:-60px;width:240px;height:240px;border-radius:50%;background:radial-gradient(circle,rgba(34,197,94,0.06),transparent 70%);pointer-events:none;}
+
+  .brand{font-family:'Bebas Neue',sans-serif;font-size:48px;letter-spacing:5px;color:var(--gold);line-height:1;}
+  .tagline{font-size:12px;color:var(--muted);letter-spacing:3px;text-transform:uppercase;font-family:'DM Mono',monospace;margin-top:6px;}
+
+  .oil-visual{margin:32px 0;display:flex;align-items:center;gap:16px;}
+  .oil-drop-big{width:52px;height:52px;background:radial-gradient(circle at 35% 30%,var(--gold2),var(--amber));border-radius:50% 50% 50% 0;transform:rotate(-45deg);box-shadow:0 0 30px rgba(212,168,67,0.35);flex-shrink:0;}
+  .oil-desc{font-size:14px;color:rgba(232,237,245,0.75);line-height:1.6;}
+
+  .features{list-style:none;}
+  .features li{display:flex;align-items:flex-start;gap:12px;padding:9px 0;font-size:13px;color:rgba(232,237,245,0.8);border-bottom:1px solid rgba(26,37,53,0.5);}
+  .features li:last-child{border-bottom:none;}
+  .feat-icon{font-size:16px;margin-top:1px;flex-shrink:0;}
+
+  .disclaimer{font-size:10px;color:var(--muted);line-height:1.7;padding:14px;background:rgba(0,0,0,0.2);border-radius:10px;border:1px solid rgba(26,37,53,0.7);}
+
+  /* RIGHT PANEL */
+  .auth-right{width:400px;padding:52px 44px;display:flex;flex-direction:column;justify-content:center;}
+  .auth-heading{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:2px;margin-bottom:4px;}
+  .auth-sub{font-size:13px;color:var(--muted);margin-bottom:28px;}
+
+  .auth-tabs{display:flex;gap:0;margin-bottom:28px;background:var(--bg3);border-radius:12px;padding:4px;}
+  .auth-tab{flex:1;padding:10px;text-align:center;border-radius:9px;font-weight:700;font-size:13px;cursor:pointer;transition:all .2s;color:var(--muted);border:none;background:transparent;font-family:'Syne',sans-serif;}
+  .auth-tab.active{background:linear-gradient(135deg,var(--gold),var(--amber));color:#000;}
+
+  .form-group{margin-bottom:14px;}
+  .form-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-family:'DM Mono',monospace;margin-bottom:5px;display:block;}
+  .form-input{width:100%;padding:12px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;font-family:'Syne',sans-serif;outline:none;transition:border-color .2s;}
+  .form-input:focus{border-color:var(--gold);}
+  .form-input::placeholder{color:var(--muted);}
+  select.form-input{cursor:pointer;}
+  select.form-input option{background:var(--bg2);}
+
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+
+  .btn-primary{width:100%;padding:14px;background:linear-gradient(135deg,var(--gold),var(--amber));border:none;border-radius:12px;color:#000;font-weight:800;font-size:15px;cursor:pointer;font-family:'Syne',sans-serif;margin-top:6px;transition:all .2s;letter-spacing:.5px;}
+  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(212,168,67,0.3);}
+  .btn-primary:active{transform:translateY(0);}
+  .btn-primary:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+
+  .auth-switch{text-align:center;margin-top:16px;font-size:13px;color:var(--muted);}
+  .auth-switch a{color:var(--gold);font-weight:700;cursor:pointer;text-decoration:none;}
+
+  .error-box{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:10px;padding:12px 14px;font-size:13px;color:#fca5a5;margin-bottom:14px;display:none;}
+  .success-box{background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);border-radius:10px;padding:12px 14px;font-size:13px;color:#86efac;margin-bottom:14px;display:none;}
+
+  .spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(0,0,0,0.3);border-top-color:#000;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px;}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  @media(max-width:700px){
+    .auth-wrap{flex-direction:column;margin:0;border-radius:0;}
+    .auth-left{padding:32px 28px;}
+    .auth-right{width:100%;padding:32px 28px;}
+    .oil-visual{display:none;}
+  }
+</style>
+</head>
+<body>
+<div class="glow-orb orb1"></div>
+<div class="glow-orb orb2"></div>
+
+<div class="auth-wrap">
+  <!-- LEFT -->
+  <div class="auth-left">
+    <div>
+      <div class="brand">PetraYield</div>
+      <div class="tagline">Refining Digital Wealth</div>
+      <div class="oil-visual">
+        <div class="oil-drop-big"></div>
+        <div class="oil-desc">Digital oil barrels that generate<br>real crypto yields, every single day.</div>
+      </div>
+      <ul class="features">
+        <li><span class="feat-icon">⛽</span><span>7 investment barrels — from $10 to $105 USDT</span></li>
+        <li><span class="feat-icon">📈</span><span>Up to <strong style="color:var(--gold)">343% ROI</strong> on Petra Supreme (150 days)</span></li>
+        <li><span class="feat-icon">🔁</span><span>Cycle-end reinvestment with +5% bonus</span></li>
+        <li><span class="feat-icon">👥</span><span>2-level referral: 5% (L1) + 2% (L2)</span></li>
+        <li><span class="feat-icon">🌍</span><span>Designed for Africa & global crypto users</span></li>
+        <li><span class="feat-icon">💳</span><span>Deposits via USDT (BEP20) · Binance Wallet</span></li>
+      </ul>
+    </div>
+    <div class="disclaimer">
+      ⚠ Petra Barrels are symbolic digital investment units — not real oil. Returns are projected, not guaranteed. Only invest what you can afford to lose.
+    </div>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="auth-right">
+    <div class="auth-heading" id="auth-heading">Welcome Back</div>
+    <div class="auth-sub" id="auth-sub">Login to your PetraYield account</div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-login" onclick="showTab('login')">Login</button>
+      <button class="auth-tab" id="tab-register" onclick="showTab('register')">Register</button>
+    </div>
+
+    <div id="error-msg" class="error-box"></div>
+    <div id="success-msg" class="success-box"></div>
+
+    <!-- LOGIN FORM -->
+    <div id="login-form">
+      <div class="form-group">
+        <label class="form-label">Phone Number</label>
+        <input class="form-input" type="tel" id="login-phone" placeholder="+254 700 000 000" autocomplete="tel">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input class="form-input" type="password" id="login-password" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <button class="btn-primary" id="login-btn" onclick="handleLogin()">Login to Dashboard →</button>
+      <div class="auth-switch">No account? <a onclick="showTab('register')">Create one free</a></div>
+    </div>
+
+    <!-- REGISTER FORM -->
+    <div id="register-form" style="display:none;">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Full Name</label>
+          <input class="form-input" type="text" id="reg-name" placeholder="Amara Osei">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Country</label>
+          <select class="form-input" id="reg-country">
+            <option value="">Select...</option>
+            <option>Nigeria</option><option>Kenya</option><option>Ghana</option>
+            <option>South Africa</option><option>Tanzania</option><option>Uganda</option>
+            <option>Ethiopia</option><option>Cameroon</option><option>Senegal</option>
+            <option>Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Phone Number</label>
+        <input class="form-input" type="tel" id="reg-phone" placeholder="+254 700 000 000">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input class="form-input" type="password" id="reg-password" placeholder="Min 6 chars">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Confirm Password</label>
+          <input class="form-input" type="password" id="reg-confirm" placeholder="Repeat password">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Referral Code (optional)</label>
+        <input class="form-input" type="text" id="reg-referral" placeholder="PY-XXXXXX">
+      </div>
+      <button class="btn-primary" id="register-btn" onclick="handleRegister()">Create My Account →</button>
+      <div class="auth-switch">Already have an account? <a onclick="showTab('login')">Login</a></div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { registerUser, loginUser, auth } from './firebase.js';
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+
+// Redirect if already logged in
+onAuthStateChanged(auth, user => {
+  if (user) window.location.href = './dashboard.html';
+});
+
+// Expose to onclick handlers
+window.showTab = (tab) => {
+  const isLogin = tab === 'login';
+  document.getElementById('login-form').style.display = isLogin ? 'block' : 'none';
+  document.getElementById('register-form').style.display = isLogin ? 'none' : 'block';
+  document.getElementById('tab-login').classList.toggle('active', isLogin);
+  document.getElementById('tab-register').classList.toggle('active', !isLogin);
+  document.getElementById('auth-heading').textContent = isLogin ? 'Welcome Back' : 'Create Account';
+  document.getElementById('auth-sub').textContent = isLogin ? 'Login to your PetraYield account' : 'Join thousands of investors earning daily';
+  clearMsgs();
+};
+
+window.handleLogin = async () => {
+  const phone    = document.getElementById('login-phone').value.trim();
+  const password = document.getElementById('login-password').value;
+  if (!phone || !password) return showError('Please enter your phone number and password.');
+  setLoading('login-btn', true);
+  try {
+    await loginUser(phone, password);
+    window.location.href = './dashboard.html';
+  } catch(e) {
+    showError(friendlyError(e.code));
+  } finally { setLoading('login-btn', false); }
+};
+
+window.handleRegister = async () => {
+  const fullName     = document.getElementById('reg-name').value.trim();
+  const country      = document.getElementById('reg-country').value;
+  const phone        = document.getElementById('reg-phone').value.trim();
+  const password     = document.getElementById('reg-password').value;
+  const confirm      = document.getElementById('reg-confirm').value;
+  const referralCode = document.getElementById('reg-referral').value.trim();
+
+  if (!fullName || !country || !phone || !password)
+    return showError('Please fill in all required fields.');
+  if (password.length < 6)
+    return showError('Password must be at least 6 characters.');
+  if (password !== confirm)
+    return showError('Passwords do not match.');
+
+  setLoading('register-btn', true);
+  try {
+    const result = await registerUser({ fullName, phone, country, password, referralCode });
+    showSuccess(`Account created! Your referral code: ${result.referralCode}. Redirecting...`);
+    setTimeout(() => window.location.href = './dashboard.html', 2000);
+  } catch(e) {
+    showError(friendlyError(e.code));
+  } finally { setLoading('register-btn', false); }
+};
+
+function setLoading(btnId, loading) {
+  const btn = document.getElementById(btnId);
+  btn.disabled = loading;
+  btn.innerHTML = loading
+    ? '<span class="spinner"></span> Please wait...'
+    : btnId === 'login-btn' ? 'Login to Dashboard →' : 'Create My Account →';
+}
+
+function showError(msg) {
+  const el = document.getElementById('error-msg');
+  el.textContent = '⚠ ' + msg;
+  el.style.display = 'block';
+  document.getElementById('success-msg').style.display = 'none';
+}
+function showSuccess(msg) {
+  const el = document.getElementById('success-msg');
+  el.textContent = '✅ ' + msg;
+  el.style.display = 'block';
+  document.getElementById('error-msg').style.display = 'none';
+}
+function clearMsgs() {
+  document.getElementById('error-msg').style.display = 'none';
+  document.getElementById('success-msg').style.display = 'none';
+}
+
+function friendlyError(code) {
+  const map = {
+    'auth/user-not-found':       'No account found with that phone number.',
+    'auth/wrong-password':       'Incorrect password. Please try again.',
+    'auth/email-already-in-use': 'An account with this phone number already exists.',
+    'auth/weak-password':        'Password must be at least 6 characters.',
+    'auth/invalid-email':        'Invalid phone number format.',
+    'auth/too-many-requests':    'Too many attempts. Please wait and try again.',
+    'auth/network-request-failed': 'Network error. Check your internet connection.',
+  };
+  return map[code] || 'Something went wrong. Please try again.';
+}
+</script>
+</body>
+</html>
