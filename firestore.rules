@@ -1,0 +1,49 @@
+// firestore.rules
+// Deploy via: firebase deploy --only firestore:rules
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Users: only the user can read/write their own profile
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Deposits: user can create + read their own; admin reads all
+    match /deposits/{depositId} {
+      allow create: if request.auth != null && request.resource.data.uid == request.auth.uid;
+      allow read:   if request.auth != null && resource.data.uid == request.auth.uid;
+      allow update: if false; // Only cloud functions / admin SDK
+    }
+
+    // Withdrawals: user can create + read their own
+    match /withdrawals/{wdId} {
+      allow create: if request.auth != null && request.resource.data.uid == request.auth.uid;
+      allow read:   if request.auth != null && resource.data.uid == request.auth.uid;
+      allow update: if false;
+    }
+
+    // Barrels: user can read their own
+    match /barrels/{barrelId} {
+      allow read:  if request.auth != null && resource.data.uid == request.auth.uid;
+      allow write: if false; // Only activated by admin/server
+    }
+
+    // Transactions: user can read their own
+    match /transactions/{txId} {
+      allow read:   if request.auth != null && resource.data.uid == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.uid == request.auth.uid;
+      allow update: if false;
+    }
+
+    // Referrals: user can read their own
+    match /referrals/{refId} {
+      allow read:   if request.auth != null &&
+                       (resource.data.referrerId == request.auth.uid ||
+                        resource.data.refereeId  == request.auth.uid);
+      allow create: if request.auth != null;
+      allow update: if false;
+    }
+  }
+}
