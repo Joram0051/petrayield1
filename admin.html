@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PetraYield Admin Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#080b0f;--bg2:#0d1117;--bg3:#111820;--card:#0f161e;--border:#1a2535;--gold:#d4a843;--gold2:#f0c76a;--gold-dim:rgba(212,168,67,0.12);--amber:#e8870a;--green:#22c55e;--red:#ef4444;--blue:#3b82f6;--text:#e8edf5;--muted:#6b7d93;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'Syne',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+  #admin-login{position:fixed;inset:0;background:var(--bg);z-index:300;display:flex;align-items:center;justify-content:center;}
+  .admin-login-box{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:40px;width:400px;text-align:center;}
+  .admin-logo{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:3px;color:var(--gold);margin-bottom:4px;}
+  .admin-subtitle{font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:2px;margin-bottom:28px;}
+  .form-group{margin-bottom:14px;text-align:left;}
+  .form-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-family:'DM Mono',monospace;margin-bottom:5px;display:block;}
+  .form-input{width:100%;padding:12px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;font-family:'Syne',sans-serif;outline:none;transition:border-color .2s;}
+  .form-input:focus{border-color:var(--gold);}
+  .form-input::placeholder{color:var(--muted);}
+  .btn-gold{width:100%;padding:13px;background:linear-gradient(135deg,var(--gold),var(--amber));border:none;border-radius:10px;color:#000;font-weight:800;font-size:14px;cursor:pointer;font-family:'Syne',sans-serif;transition:all .2s;}
+  .btn-gold:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(212,168,67,0.3);}
+  .error-box{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:10px 14px;font-size:12px;color:#fca5a5;margin-bottom:14px;display:none;text-align:left;}
+
+  /* ADMIN PANEL */
+  #admin-panel{display:none;}
+  .admin-header{background:var(--bg2);border-bottom:1px solid var(--border);padding:16px 28px;display:flex;align-items:center;justify-content:space-between;}
+  .admin-brand{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:var(--gold);}
+  .admin-brand span{font-size:12px;color:var(--red);font-family:'DM Mono',monospace;letter-spacing:2px;margin-left:10px;}
+  .admin-tabs{display:flex;gap:6px;padding:20px 28px 0;border-bottom:1px solid var(--border);}
+  .admin-tab{padding:10px 20px;border-radius:10px 10px 0 0;font-weight:700;font-size:13px;cursor:pointer;color:var(--muted);transition:all .2s;border:1px solid transparent;border-bottom:none;}
+  .admin-tab.active{background:var(--card);color:var(--gold);border-color:var(--border);}
+  .admin-content{padding:28px;}
+  .admin-page{display:none;}
+  .admin-page.active{display:block;}
+
+  .stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:28px;}
+  .a-stat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px 20px;}
+  .a-stat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;font-family:'DM Mono',monospace;margin-bottom:8px;}
+  .a-stat-val{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;}
+
+  .sec-title{font-family:'Bebas Neue',sans-serif;font-size:19px;letter-spacing:2px;margin-bottom:14px;display:flex;align-items:center;gap:12px;}
+  .sec-title::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--border),transparent);}
+
+  .data-table-wrap{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:28px;}
+  .data-table{width:100%;border-collapse:collapse;}
+  .data-table th{text-align:left;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;font-family:'DM Mono',monospace;padding:12px 16px;border-bottom:1px solid var(--border);font-weight:500;}
+  .data-table td{padding:13px 16px;border-bottom:1px solid rgba(26,37,53,0.4);font-size:13px;vertical-align:middle;}
+  .data-table tr:last-child td{border-bottom:none;}
+  .data-table tbody tr{transition:background .15s;}
+  .data-table tbody tr:hover{background:rgba(255,255,255,0.02);}
+  
+  .status-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;font-family:'DM Mono',monospace;}
+  .s-pending{background:rgba(212,168,67,0.1);color:var(--gold);}
+  .s-confirmed{background:rgba(34,197,94,0.1);color:var(--green);}
+  .s-rejected{background:rgba(239,68,68,0.1);color:var(--red);}
+  .s-active{background:rgba(59,130,246,0.1);color:var(--blue);}
+
+  .action-btn{padding:5px 12px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;border:none;font-family:'Syne',sans-serif;transition:all .2s;margin-right:5px;}
+  .btn-confirm{background:rgba(34,197,94,0.15);color:var(--green);border:1px solid rgba(34,197,94,0.3);}
+  .btn-confirm:hover{background:rgba(34,197,94,0.3);}
+  .btn-reject{background:rgba(239,68,68,0.1);color:var(--red);border:1px solid rgba(239,68,68,0.25);}
+  .btn-reject:hover{background:rgba(239,68,68,0.25);}
+  .btn-process{background:rgba(59,130,246,0.15);color:var(--blue);border:1px solid rgba(59,130,246,0.3);}
+  .btn-process:hover{background:rgba(59,130,246,0.25);}
+
+  .refresh-btn{padding:8px 16px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;font-family:'Syne',sans-serif;}
+  .refresh-btn:hover{border-color:var(--gold);color:var(--gold);}
+  .logout-link{font-size:12px;color:var(--muted);cursor:pointer;padding:8px 14px;border-radius:8px;}
+  .logout-link:hover{color:var(--red);}
+
+  .loading{text-align:center;padding:40px;color:var(--muted);font-family:'DM Mono',monospace;font-size:12px;}
+  .loader{width:24px;height:24px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px;}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  #toast{position:fixed;bottom:24px;right:24px;background:var(--card);border:1px solid var(--gold);border-radius:12px;padding:12px 18px;font-size:13px;font-weight:600;z-index:999;transform:translateY(80px);opacity:0;transition:all .3s;pointer-events:none;box-shadow:0 8px 32px rgba(212,168,67,0.12);}
+  #toast.show{transform:translateY(0);opacity:1;}
+  ::-webkit-scrollbar{width:5px;}
+  ::-webkit-scrollbar-track{background:var(--bg);}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+</style>
+</head>
+<body>
+
+<!-- ADMIN LOGIN -->
+<div id="admin-login">
+  <div class="admin-login-box">
+    <div class="admin-logo">PetraYield</div>
+    <div class="admin-subtitle">Admin Panel · Restricted Access</div>
+    <div id="admin-error" class="error-box"></div>
+    <div class="form-group">
+      <label class="form-label">Admin Email</label>
+      <input class="form-input" type="email" id="admin-email" placeholder="admin@petrayield.app">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Admin Password</label>
+      <input class="form-input" type="password" id="admin-pass" placeholder="••••••••">
+    </div>
+    <button class="btn-gold" onclick="adminLogin()">Access Admin Panel →</button>
+    <div style="margin-top:16px;font-size:11px;color:var(--muted);">⚠ Unauthorized access is prohibited and logged.</div>
+  </div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div id="admin-panel">
+  <div class="admin-header">
+    <div>
+      <div class="admin-brand">PetraYield <span>ADMIN</span></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <button class="refresh-btn" onclick="loadAllData()">↻ Refresh</button>
+      <span class="logout-link" onclick="adminLogout()">↩ Logout</span>
+    </div>
+  </div>
+
+  <div class="admin-tabs">
+    <div class="admin-tab active" onclick="showAdminTab('deposits')">⬇ Deposits</div>
+    <div class="admin-tab" onclick="showAdminTab('withdrawals')">⬆ Withdrawals</div>
+    <div class="admin-tab" onclick="showAdminTab('users')">👥 Users</div>
+    <div class="admin-tab" onclick="showAdminTab('barrels')">⛽ Active Barrels</div>
+  </div>
+
+  <div class="admin-content">
+
+    <!-- STATS -->
+    <div class="stats-row" id="admin-stats">
+      <div class="a-stat"><div class="a-stat-label">Total Users</div><div class="a-stat-val" id="as-users">—</div></div>
+      <div class="a-stat"><div class="a-stat-label">Pending Deposits</div><div class="a-stat-val" style="color:var(--gold)" id="as-pdeposits">—</div></div>
+      <div class="a-stat"><div class="a-stat-label">Pending Withdrawals</div><div class="a-stat-val" style="color:var(--red)" id="as-pwithdrawals">—</div></div>
+      <div class="a-stat"><div class="a-stat-label">Active Barrels</div><div class="a-stat-val" style="color:var(--green)" id="as-barrels">—</div></div>
+    </div>
+
+    <!-- DEPOSITS TAB -->
+    <div class="admin-page active" id="admin-deposits">
+      <div class="sec-title">Pending Deposits</div>
+      <div class="data-table-wrap">
+        <table class="data-table">
+          <thead><tr><th>User ID</th><th>Barrel</th><th>Amount</th><th>TX Hash</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="dep-tbody"><tr><td colspan="7" class="loading"><div class="loader"></div>Loading...</td></tr></tbody>
+        </table>
+      </div>
+      <div class="sec-title">All Deposits</div>
+      <div class="data-table-wrap">
+        <table class="data-table">
+          <thead><tr><th>User ID</th><th>Barrel</th><th>Amount</th><th>TX Hash</th><th>Date</th><th>Status</th></tr></thead>
+          <tbody id="all-dep-tbody"><tr><td colspan="6" class="loading"><div class="loader"></div>Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- WITHDRAWALS TAB -->
+    <div class="admin-page" id="admin-withdrawals">
+      <div class="sec-title">Pending Withdrawals</div>
+      <div class="data-table-wrap">
+        <table class="data-table">
+          <thead><tr><th>User ID</th><th>Amount</th><th>Fee</th><th>Net</th><th>Wallet</th><th>Date</th><th>Actions</th></tr></thead>
+          <tbody id="wd-tbody"><tr><td colspan="7" class="loading"><div class="loader"></div>Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- USERS TAB -->
+    <div class="admin-page" id="admin-users">
+      <div class="sec-title">All Users</div>
+      <div class="data-table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Name</th><th>Phone</th><th>Country</th><th>Balance</th><th>Earnings</th><th>Barrels</th><th>Joined</th><th>Status</th></tr></thead>
+          <tbody id="users-tbody"><tr><td colspan="8" class="loading"><div class="loader"></div>Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- BARRELS TAB -->
+    <div class="admin-page" id="admin-barrels">
+      <div class="sec-title">All Active Barrels</div>
+      <div class="data-table-wrap">
+        <table class="data-table">
+          <thead><tr><th>User ID</th><th>Barrel</th><th>Price</th><th>Daily Yield</th><th>Start</th><th>End</th><th>Status</th></tr></thead>
+          <tbody id="barrels-tbody"><tr><td colspan="7" class="loading"><div class="loader"></div>Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script type="module">
+import { auth, db } from './firebase.js';
+import {
+  signInWithEmailAndPassword, onAuthStateChanged, signOut
+} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+import {
+  collection, getDocs, doc, updateDoc, addDoc,
+  query, where, orderBy, serverTimestamp, increment
+} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+
+// ── ADMIN EMAILS (add your admin email here) ──
+const ADMIN_EMAILS = ['admin@petrayield.app']; // <-- ADD YOUR ADMIN EMAIL
+
+let adminUser = null;
+
+onAuthStateChanged(auth, user => {
+  if (user && ADMIN_EMAILS.includes(user.email)) {
+    adminUser = user;
+    document.getElementById('admin-login').style.display = 'none';
+    document.getElementById('admin-panel').style.display = 'block';
+    loadAllData();
+  }
+});
+
+window.adminLogin = async () => {
+  const email = document.getElementById('admin-email').value.trim();
+  const pass  = document.getElementById('admin-pass').value;
+  const errEl = document.getElementById('admin-error');
+  errEl.style.display = 'none';
+  if (!ADMIN_EMAILS.includes(email)) {
+    errEl.textContent = '⚠ Unauthorized. This email is not an admin account.';
+    errEl.style.display = 'block';
+    return;
+  }
+  try {
+    await signInWithEmailAndPassword(auth, email, pass);
+  } catch(e) {
+    errEl.textContent = '⚠ Invalid credentials.';
+    errEl.style.display = 'block';
+  }
+};
+
+window.adminLogout = async () => {
+  await signOut(auth);
+  window.location.reload();
+};
+
+window.showAdminTab = (tab) => {
+  document.querySelectorAll('.admin-tab').forEach((t,i) => {
+    const tabs = ['deposits','withdrawals','users','barrels'];
+    t.classList.toggle('active', tabs[i]===tab);
+  });
+  document.querySelectorAll('.admin-page').forEach(p => p.classList.remove('active'));
+  document.getElementById('admin-'+tab).classList.add('active');
+};
+
+// ── LOAD ALL DATA ──
+window.loadAllData = async () => {
+  await Promise.all([loadDeposits(), loadWithdrawals(), loadUsers(), loadBarrelsList()]);
+};
+
+async function loadDeposits() {
+  const tbody    = document.getElementById('dep-tbody');
+  const allTbody = document.getElementById('all-dep-tbody');
+  try {
+    const snap = await getDocs(query(collection(db,'deposits'), orderBy('createdAt','desc')));
+    const all  = snap.docs.map(d => ({id:d.id,...d.data()}));
+    const pend = all.filter(d => d.status==='pending');
+    
+    document.getElementById('as-pdeposits').textContent = pend.length;
+
+    tbody.innerHTML = pend.length ? pend.map(dep => depRow(dep, true)).join('') :
+      '<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--muted)">No pending deposits ✅</td></tr>';
+
+    allTbody.innerHTML = all.length ? all.map(dep => depRow(dep, false)).join('') :
+      '<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--muted)">No deposits yet.</td></tr>';
+  } catch(e) { tbody.innerHTML = '<tr><td colspan="7" style="color:var(--red);padding:24px">Error loading deposits.</td></tr>'; }
+}
+
+function depRow(dep, showActions) {
+  const date = dep.createdAt?.toDate ? dep.createdAt.toDate().toLocaleDateString() : '—';
+  const scls = {pending:'s-pending', confirmed:'s-confirmed', rejected:'s-rejected'}[dep.status]||'s-pending';
+  const actions = showActions ? `
+    <td>
+      <button class="action-btn btn-confirm" onclick="confirmDeposit('${dep.id}','${dep.uid}','${dep.barrelName}','${dep.amount}')">✓ Confirm</button>
+      <button class="action-btn btn-reject" onclick="rejectDeposit('${dep.id}','${dep.uid}','${dep.amount}')">✗ Reject</button>
+    </td>` : '';
+  return `<tr>
+    <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted)">${dep.uid.slice(0,10)}...</td>
+    <td style="font-weight:700">${dep.barrelName}</td>
+    <td style="color:var(--gold);font-weight:700">$${dep.amount}</td>
+    <td style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted)">${dep.txHash ? dep.txHash.slice(0,14)+'...' : '—'}</td>
+    <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted)">${date}</td>
+    <td><span class="status-badge ${scls}">${dep.status}</span></td>
+    ${actions}
+  </tr>`;
+}
+
+window.confirmDeposit = async (depId, uid, barrelName, amount) => {
+  if (!confirm(`Confirm deposit of $${amount} for ${barrelName}?\nThis will activate the barrel for user ${uid.slice(0,8)}...`)) return;
+  try {
+    // 1. Update deposit status
+    await updateDoc(doc(db,'deposits',depId), { status:'confirmed', confirmedAt: serverTimestamp() });
+
+    // 2. Activate barrel
+    const { BARRELS } = await import('./firebase.js');
+    const barrel = BARRELS.find(b => b.name === barrelName);
+    if (!barrel) throw new Error('Barrel not found');
+    const start = new Date(), end = new Date();
+    end.setDate(end.getDate() + barrel.cycle);
+    await addDoc(collection(db,'barrels'), {
+      uid, barrelName: barrel.name, price: barrel.price, cycle: barrel.cycle,
+      dailyYield: barrel.daily, totalReturn: barrel.total, roi: barrel.roi,
+      earned: 0, daysCompleted: 0,
+      startDate: start.toISOString(), endDate: end.toISOString(),
+      status: 'active', createdAt: serverTimestamp()
+    });
+
+    // 3. Update user balance
+    await updateDoc(doc(db,'users',uid), {
+      activeBarrels: increment(1),
+      totalBalance: increment(barrel.price)
+    });
+
+    // 4. Log transaction
+    await addDoc(collection(db,'transactions'), {
+      uid, type:'deposit', amount: barrel.price,
+      note: `${barrel.name} deposit confirmed`, status:'completed', createdAt: serverTimestamp()
+    });
+
+    toast(`✅ Deposit confirmed! ${barrelName} activated for user.`);
+    loadAllData();
+  } catch(e) { toast('❌ Error confirming deposit: ' + e.message); }
+};
+
+window.rejectDeposit = async (depId, uid, amount) => {
+  const reason = prompt('Reason for rejection (optional):') || 'Rejected by admin';
+  try {
+    await updateDoc(doc(db,'deposits',depId), { status:'rejected', adminNote: reason });
+    await addDoc(collection(db,'transactions'), {
+      uid, type:'deposit', amount: parseFloat(amount),
+      note: `Deposit rejected: ${reason}`, status:'rejected', createdAt: serverTimestamp()
+    });
+    toast('⚠ Deposit rejected.');
+    loadAllData();
+  } catch(e) { toast('❌ Error rejecting deposit.'); }
+};
+
+async function loadWithdrawals() {
+  const tbody = document.getElementById('wd-tbody');
+  try {
+    const snap = await getDocs(query(collection(db,'withdrawals'), where('status','==','pending'), orderBy('createdAt','desc')));
+    const wds  = snap.docs.map(d=>({id:d.id,...d.data()}));
+    document.getElementById('as-pwithdrawals').textContent = wds.length;
+    tbody.innerHTML = wds.length ? wds.map(w => {
+      const date = w.createdAt?.toDate ? w.createdAt.toDate().toLocaleDateString() : '—';
+      return `<tr>
+        <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted)">${w.uid.slice(0,10)}...</td>
+        <td style="color:var(--red);font-weight:700">$${w.amount.toFixed(2)}</td>
+        <td style="color:var(--muted)">-$${w.fee.toFixed(2)}</td>
+        <td style="color:var(--green);font-weight:700">$${w.netAmount.toFixed(2)}</td>
+        <td style="font-family:'DM Mono',monospace;font-size:10px">${w.walletAddress.slice(0,16)}...</td>
+        <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted)">${date}</td>
+        <td>
+          <button class="action-btn btn-process" onclick="processWithdrawal('${w.id}','${w.uid}','${w.amount}','${w.netAmount}','${w.walletAddress}')">✓ Mark Sent</button>
+          <button class="action-btn btn-reject" onclick="rejectWithdrawal('${w.id}','${w.uid}','${w.amount}')">✗ Reject</button>
+        </td>
+      </tr>`;
+    }).join('') : '<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--muted)">No pending withdrawals ✅</td></tr>';
+  } catch(e) { tbody.innerHTML = '<tr><td colspan="7" style="color:var(--red);padding:24px">Error loading withdrawals.</td></tr>'; }
+}
+
+window.processWithdrawal = async (wdId, uid, amount, net, wallet) => {
+  if (!confirm(`Mark $${net} USDT as sent to ${wallet.slice(0,16)}...?\n\nMake sure you have sent the USDT before confirming.`)) return;
+  try {
+    await updateDoc(doc(db,'withdrawals',wdId), { status:'processed', processedAt: serverTimestamp() });
+    await updateDoc(doc(db,'transactions', wdId), { status:'completed' }).catch(()=>{});
+    await addDoc(collection(db,'transactions'), {
+      uid, type:'withdrawal', amount: -parseFloat(amount),
+      note:`Withdrawal processed – $${net} sent`, status:'completed', createdAt: serverTimestamp()
+    });
+    toast(`✅ Withdrawal marked as processed.`);
+    loadAllData();
+  } catch(e) { toast('❌ Error processing withdrawal.'); }
+};
+
+window.rejectWithdrawal = async (wdId, uid, amount) => {
+  const reason = prompt('Reason for rejection:') || 'Rejected by admin';
+  try {
+    await updateDoc(doc(db,'withdrawals',wdId), { status:'rejected', adminNote: reason });
+    // Refund withdrawable balance
+    await updateDoc(doc(db,'users',uid), { withdrawableBalance: increment(parseFloat(amount)) });
+    await addDoc(collection(db,'transactions'), {
+      uid, type:'withdrawal', amount: parseFloat(amount),
+      note:`Withdrawal rejected: ${reason}`, status:'rejected', createdAt: serverTimestamp()
+    });
+    toast('⚠ Withdrawal rejected and balance refunded.');
+    loadAllData();
+  } catch(e) { toast('❌ Error rejecting withdrawal.'); }
+};
+
+async function loadUsers() {
+  const tbody = document.getElementById('users-tbody');
+  try {
+    const snap = await getDocs(collection(db,'users'));
+    const users = snap.docs.map(d=>({id:d.id,...d.data()}));
+    document.getElementById('as-users').textContent = users.length;
+    tbody.innerHTML = users.length ? users.map(u => {
+      const date = u.createdAt?.toDate ? u.createdAt.toDate().toLocaleDateString() : '—';
+      return `<tr>
+        <td style="font-weight:700">${u.fullName||'—'}</td>
+        <td style="font-family:'DM Mono',monospace;font-size:11px">${u.phone||'—'}</td>
+        <td style="color:var(--muted)">${u.country||'—'}</td>
+        <td style="color:var(--gold);font-weight:700">$${(u.totalBalance||0).toFixed(2)}</td>
+        <td style="color:var(--green)">$${(u.totalEarnings||0).toFixed(2)}</td>
+        <td>${u.activeBarrels||0}</td>
+        <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted)">${date}</td>
+        <td><span class="status-badge ${u.status==='active'?'s-active':'s-rejected'}">${u.status||'active'}</span></td>
+      </tr>`;
+    }).join('') : '<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--muted)">No users yet.</td></tr>';
+  } catch(e) { tbody.innerHTML = '<tr><td colspan="8" style="color:var(--red);padding:24px">Error loading users.</td></tr>'; }
+}
+
+async function loadBarrelsList() {
+  const tbody = document.getElementById('barrels-tbody');
+  try {
+    const snap = await getDocs(query(collection(db,'barrels'), where('status','==','active')));
+    const barrels = snap.docs.map(d=>({id:d.id,...d.data()}));
+    document.getElementById('as-barrels').textContent = barrels.length;
+    tbody.innerHTML = barrels.length ? barrels.map(b => `<tr>
+      <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted)">${b.uid.slice(0,10)}...</td>
+      <td style="font-weight:700">${b.barrelName}</td>
+      <td style="color:var(--gold)">$${b.price}</td>
+      <td style="color:var(--green)">$${b.dailyYield}/day</td>
+      <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted)">${new Date(b.startDate).toLocaleDateString()}</td>
+      <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted)">${new Date(b.endDate).toLocaleDateString()}</td>
+      <td><span class="status-badge s-active">Active</span></td>
+    </tr>`).join('') : '<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--muted)">No active barrels.</td></tr>';
+  } catch(e) { tbody.innerHTML = '<tr><td colspan="7" style="color:var(--red);padding:24px">Error loading barrels.</td></tr>'; }
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+window.toast = toast;
+</script>
+</body>
+</html>
